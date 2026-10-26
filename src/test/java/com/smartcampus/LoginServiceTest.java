@@ -8,7 +8,6 @@ class LoginServiceTest {
     @Test
     void testSuccessfulLogin() {
         LoginService service = new LoginService();
-        // ERREUR VOLONTAIRE POUR LE TP3
-        assertFalse(service.authenticate("etudiant@ensak.ac.ma", "SmartCampus2026!"));
+        assertTrue(service.authenticate("etudiant@ensak.ac.ma", "SmartCampus2026!"));
     }
 }
