@@ -1,0 +1,4 @@
+# TP5 Kubernetes - commandes
+minikube start
+kubectl apply -f k8s/
+kubectl port-forward svc/smartcampus 8080:80
