@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class LoginService {
 
-    private final Map<String, String> users = new ConcurrentHashMap<>();
+    private final Map<String, UserAccount> users = new ConcurrentHashMap<>();
     private final Map<String, Integer> failedAttempts = new ConcurrentHashMap<>();
     private final int maxFailedAttempts;
 
@@ -18,11 +18,17 @@ public class LoginService {
 
     public LoginService(int maxFailedAttempts) {
         this.maxFailedAttempts = maxFailedAttempts;
-        users.put("etudiant@ensa.ma", "motdepasse123");
+        registerUser("etudiant@ensa.ma", "motdepasse123", "ETUDIANT");
+        registerUser("admin@ensa.ma", "admin12345", "ADMIN");
+        registerUser("prof@ensa.ma", "prof12345", "PROFESSEUR");
     }
 
     public void registerUser(String email, String password) {
-        users.put(email, password);
+        registerUser(email, password, "ETUDIANT");
+    }
+
+    public void registerUser(String email, String password, String role) {
+        users.put(email, new UserAccount(password, role));
     }
 
     public LoginResult login(String email, String password) {
@@ -33,10 +39,10 @@ public class LoginService {
             return LoginResult.failure("Le mot de passe est obligatoire.");
         }
 
-        String expected = users.get(email);
-        if (expected != null && expected.equals(password)) {
+        UserAccount account = users.get(email);
+        if (account != null && account.password().equals(password)) {
             failedAttempts.remove(email);
-            return LoginResult.ok();
+            return LoginResult.ok(account.role());
         }
 
         int attempts = failedAttempts.merge(email, 1, Integer::sum);
@@ -50,13 +56,15 @@ public class LoginService {
         return failedAttempts.getOrDefault(email, 0);
     }
 
-    public record LoginResult(boolean success, String message) {
-        public static LoginResult ok() {
-            return new LoginResult(true, null);
+    public record UserAccount(String password, String role) {}
+
+    public record LoginResult(boolean success, String message, String role) {
+        public static LoginResult ok(String role) {
+            return new LoginResult(true, null, role);
         }
 
         public static LoginResult failure(String message) {
-            return new LoginResult(false, message);
+            return new LoginResult(false, message, null);
         }
     }
 }
